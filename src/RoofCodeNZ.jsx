@@ -196,6 +196,32 @@ function LoadingDots() {
 function PaywallModal({ onClose, onUnlock }) {
   const [code, setCode] = useState("");
   const [err, setErr] = useState("");
+  const [checking, setChecking] = useState(false);
+
+  const handleUnlock = async () => {
+    if (!code.trim()) return;
+    setChecking(true);
+    setErr("");
+    try {
+      const res = await fetch("/api/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: code.trim() }),
+      });
+      const data = await res.json();
+      if (data.valid) {
+        try { localStorage.setItem("rcnz_token", code.trim()); } catch(_) {}
+        onUnlock();
+      } else {
+        setErr(data.error || "Invalid code — check your email after subscribing.");
+      }
+    } catch(e) {
+      setErr("Could not verify. Check your connection and try again.");
+    } finally {
+      setChecking(false);
+    }
+  };
+
   return (
     <div style={{ position:"fixed", inset:0, background:"rgba(15,23,42,.6)", backdropFilter:"blur(6px)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:300, padding:20 }}>
       <div style={{ background:"#fff", borderRadius:24, padding:36, maxWidth:420, width:"100%", boxShadow:"0 32px 80px rgba(0,0,0,.18)" }}>
@@ -217,12 +243,14 @@ function PaywallModal({ onClose, onUnlock }) {
           Subscribe — $3.99 / month
         </a>
         <div style={{ borderTop:"1px solid #e2e8f0", paddingTop:14 }}>
-          <p style={{ fontSize:12, color:"#94a3b8", fontFamily:"system-ui", margin:"0 0 8px" }}>Already subscribed? Enter your unlock code:</p>
+          <p style={{ fontSize:12, color:"#94a3b8", fontFamily:"system-ui", margin:"0 0 8px" }}>Already subscribed? Enter your unlock code from your email:</p>
           <div style={{ display:"flex", gap:8 }}>
-            <input value={code} onChange={e=>{setCode(e.target.value);setErr("");}} onKeyDown={e=>e.key==="Enter"&&(code.trim().toUpperCase()===UNLOCK_CODE?onUnlock():setErr("Invalid code."))}
-              placeholder="Unlock code" style={{ flex:1, border:"1.5px solid #e2e8f0", borderRadius:10, padding:"9px 12px", fontSize:13, fontFamily:"system-ui", outline:"none", color:"#0f172a" }}/>
-            <button onClick={()=>code.trim().toUpperCase()===UNLOCK_CODE?onUnlock():setErr("Invalid code.")}
-              style={{ background:"#1e40af", border:"none", color:"#fff", borderRadius:10, padding:"9px 16px", cursor:"pointer", fontFamily:"system-ui", fontSize:13, fontWeight:600 }}>Unlock</button>
+            <input value={code} onChange={e=>{setCode(e.target.value);setErr("");}} onKeyDown={e=>e.key==="Enter"&&handleUnlock()}
+              placeholder="Enter your code" style={{ flex:1, border:"1.5px solid #e2e8f0", borderRadius:10, padding:"9px 12px", fontSize:13, fontFamily:"system-ui", outline:"none", color:"#0f172a" }}/>
+            <button onClick={handleUnlock} disabled={checking}
+              style={{ background:"#1e40af", border:"none", color:"#fff", borderRadius:10, padding:"9px 16px", cursor:checking?"not-allowed":"pointer", fontFamily:"system-ui", fontSize:13, fontWeight:600, opacity:checking?0.7:1 }}>
+              {checking ? "…" : "Unlock"}
+            </button>
           </div>
           {err && <p style={{ color:"#ef4444", fontSize:12, fontFamily:"system-ui", marginTop:6 }}>{err}</p>}
         </div>
