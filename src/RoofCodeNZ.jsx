@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 const FREE_LIMIT = 5;
-const STRIPE_LINK = "https://buy.stripe.com/YOUR_LINK_HERE";
+https://buy.stripe.com/test_28E7sEddA9L5bhl04k0ZW00
 const UNLOCK_CODE = "ROOFPRO399";
 
 // ─── Knowledge base (COP v26.03 March 2026) ───────────────────────────────────
